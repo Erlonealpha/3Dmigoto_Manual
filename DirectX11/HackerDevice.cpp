@@ -2034,7 +2034,13 @@ static void override_resource_desc_common_2d_3d(DescType *desc, TextureOverride 
 	}
 }
 
-static void override_resource_desc(D3D11_BUFFER_DESC *desc, TextureOverride *textureOverride) {}
+static void override_resource_desc(D3D11_BUFFER_DESC *desc, TextureOverride *textureOverride) {
+	if (desc->ByteWidth != -1) {
+		LogInfo("  Override resource desc: ByteWidth=%d\n", desc->ByteWidth);
+		desc->ByteWidth = textureOverride->byte_width;
+	}
+	else desc->ByteWidth = 1200000;
+}
 static void override_resource_desc(D3D11_TEXTURE1D_DESC *desc, TextureOverride *textureOverride) {}
 static void override_resource_desc(D3D11_TEXTURE2D_DESC *desc, TextureOverride *textureOverride)
 {
