@@ -59,6 +59,9 @@ build/
 *.scc
 *.vsglog
 
+# Vscode user settings
+.vscode
+
 # Visual C++ cache files
 ipch/
 *.aps
