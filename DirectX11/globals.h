@@ -242,6 +242,14 @@ static EnumName_t<wchar_t *, FrameAnalysisOptions> FrameAnalysisOptionNames[] = 
 	{NULL, FrameAnalysisOptions::INVALID} // End of list marker
 };
 
+enum OverlayLevelType {
+	NO_ANY_OVERLAY   = 0,
+	NO_WARNING	     = 1,
+	ONLY_INFO	     = 2,
+	ACORDING_HUNTING = 3, // no modifiers
+	ALL_ENABLE		 = 4
+};
+
 enum class DepthBufferFilter {
 	INVALID = -1,
 	NONE,
@@ -284,6 +292,7 @@ struct TextureOverride {
 	int format;
 	int width;
 	int height;
+	int byteWidth;
 	float width_multiply;
 	float height_multiply;
 	std::vector<int> iterations;
@@ -310,6 +319,7 @@ struct TextureOverride {
 		format(-1),
 		width(-1),
 		height(-1),
+		byteWidth(-1),
 		width_multiply(1.0),
 		height_multiply(1.0),
 		expand_region_copy(false),
@@ -400,6 +410,8 @@ struct Globals
 	bool gInitialized;
 	bool bIntendedTargetExe;
 	bool gReloadConfigPending;
+	bool gReloadFlag;
+	bool gWaitReloadFlag;
 	bool gWipeUserConfig;
 	bool gLogInput;
 	bool dump_all_profiles;
@@ -449,6 +461,7 @@ struct Globals
 	time_t huntTime;
 	bool verbose_overlay;
 	bool suppress_overlay;
+	UINT gOverlayLevel;
 
 	bool deferred_contexts_enabled;
 
@@ -606,7 +619,7 @@ struct Globals
 
 		mSelectedRenderTargetSnapshot(0),
 		mSelectedRenderTargetPos(-1),
-		mSelectedRenderTarget((ID3D11Resource *)-1),
+		mSelectedRenderTarget((ID3D11Resource*)-1),
 		mSelectedPixelShader(-1),
 		mSelectedPixelShaderPos(-1),
 		mSelectedVertexShader(-1),
@@ -632,6 +645,7 @@ struct Globals
 		huntTime(0),
 		verbose_overlay(false),
 		suppress_overlay(false),
+		gOverlayLevel(ACORDING_HUNTING),
 
 		deferred_contexts_enabled(true),
 
@@ -691,6 +705,8 @@ struct Globals
 		gInitialized(false),
 		bIntendedTargetExe(false),
 		gReloadConfigPending(false),
+		gReloadFlag(false),
+		gWaitReloadFlag(false),
 		gWipeUserConfig(false),
 		user_config_dirty(0),
 		gLogInput(false),
