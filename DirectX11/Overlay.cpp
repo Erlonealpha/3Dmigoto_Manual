@@ -5,6 +5,7 @@
 
 #include <DirectXColors.h>
 //#include <StrSafe.h>
+#include <stdexcept>
 
 #include "SimpleMath.h"
 #include "SpriteBatch.h"
@@ -686,6 +687,9 @@ void Overlay::DrawShaderInfoLines(float *y)
 
 void Overlay::DrawNotices(float *y)
 {
+	if (G->gOverlayLevel == NO_ANY_OVERLAY)
+		return;
+
 	std::vector<OverlayNotice>::iterator notice;
 	DWORD time = GetTickCount();
 	Vector2 textPosition;
@@ -696,9 +700,15 @@ void Overlay::DrawNotices(float *y)
 
 	has_notice = false;
 	for (level = 0; level < NUM_LOG_LEVELS; level++) {
-		if (log_levels[level].hide_in_release && G->hunting == HUNTING_MODE_DISABLED)
-			continue;
-
+		if (G->gOverlayLevel == ALL_ENABLE)
+			goto pass; // 显示所有Overlay
+		else if (G->gOverlayLevel == ACORDING_HUNTING && log_levels[level].hide_in_release && G->hunting == HUNTING_MODE_DISABLED)
+			continue; // 根据hunting模式隐藏某些Overlay
+		else if (G->gOverlayLevel == NO_WARNING && !log_levels[level].hide_in_release)
+			continue; // 不显示WARNING级别Overlay
+		else if (G->gOverlayLevel == ONLY_INFO && level == LOG_INFO)
+			continue; // 只显示INFO级别Overlay
+		pass:
 		for (notice = notices.notices[level].begin(); notice != notices.notices[level].end() && displayed < MAX_SIMULTANEOUS_NOTICES; ) {
 			if (!notice->timestamp) {
 				// Set the timestamp on the first present call
