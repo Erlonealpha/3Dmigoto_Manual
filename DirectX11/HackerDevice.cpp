@@ -2101,10 +2101,10 @@ static const DescType* process_texture_override(uint32_t hash,
 			if (!check_texture_override_iteration(textureOverride))
 				continue;
 
-			std::wstrng VertexLimitRaise = L"VertexLimitRaise";
+			std::wstring VertexLimitRaise = L"VertexLimitRaise";
 			if (textureOverride->stereoMode != -1)
 				newMode = (NVAPI_STEREO_SURFACECREATEMODE) textureOverride->stereoMode;
-			elif(textureOverride->priority == -2 || is_wcontain(textureOverride->ini_section, VertexLimitRaise)) {
+			else if (textureOverride->priority == -2 || is_wcontain(textureOverride->ini_section, VertexLimitRaise)) {
 				override_resource_desc(newDesc, textureOverride);
 				if (LogFile) {
 					char buf[256];

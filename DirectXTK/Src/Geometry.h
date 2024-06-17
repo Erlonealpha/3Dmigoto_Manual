@@ -11,6 +11,7 @@
 // http://go.microsoft.com/fwlink/?LinkId=248929
 //--------------------------------------------------------------------------------------
 
+#include <stdexcept>
 #include "VertexTypes.h"
 
 namespace DirectX

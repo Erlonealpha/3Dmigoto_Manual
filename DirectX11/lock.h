@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <vector>
+#include <stdexcept>
 
 // This version of EnterCriticalSection will use the function and line number
 // in any lock stacks dumped when potential deadlock hazards are detected:
