@@ -1977,7 +1977,7 @@ static void ToggleHunting(HackerDevice *device, void *private_data)
 	LogInfo("> Hunting toggled to %d\n", G->hunting);
 }
 
-void ParseHuntingSection()
+bool ParseHuntingSection()
 {
 	intptr_t i;
 	wchar_t buf[MAX_PATH];
@@ -1997,6 +1997,18 @@ void ParseHuntingSection()
 	G->config_reloadable = RegisterIniKeyBinding(L"Hunting", L"reload_config", FlagConfigReload, NULL, noRepeat, NULL);
 	G->config_reloadable = RegisterIniKeyBinding(L"Hunting", L"wipe_user_config", FlagConfigReload, NULL, noRepeat, (void*)true);
 
+	// [Loader] Prevent crashe mode
+	bool prevent_crash = GetIniBool(L"Loader", L"prevent_crashe_mode", false, NULL);
+	LogInfo("[Loader]\n");
+	LogInfo("  Prevent crashe mode: %d\n", prevent_crash);
+	// Erlone: 在hunting之后就绑定了ReloadConfig函数, 尝试在此调用ReloadConfig防止崩溃
+	if (prevent_crash && !G->gReloadFlag) {
+		G->gReloadFlag = true; // 防止死循环
+		G->gReloadConfigPending = true;
+		Sleep(50);
+		return true;
+	}
+
 	// We're interested in performance measurements even in release mode
 	// (possibly even especially in release mode), particularly if we want
 	// a user to send us a screenshot of the profiling info:
@@ -2012,7 +2024,7 @@ void ParseHuntingSection()
 	// Don't register hunting keys when hard disabled. In this case the
 	// only way to turn hunting on is to edit the ini file and reload it.
 	if (G->hunting == HUNTING_MODE_DISABLED)
-		return;
+		return false;
 
 	// Let's also allow an easy toggle of hunting itself, for speed and playability.
 	RegisterIniKeyBinding(L"Hunting", L"toggle_hunting", ToggleHunting, NULL, noRepeat, NULL);
@@ -2106,4 +2118,5 @@ void ParseHuntingSection()
 	}
 
 	G->verbose_overlay = GetIniBool(L"Hunting", L"verbose_overlay", false, NULL);
+	return false;
 }

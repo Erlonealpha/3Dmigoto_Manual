@@ -18,5 +18,5 @@ public:
 };
 
 void TimeoutHuntingBuffers();
-void ParseHuntingSection();
+bool ParseHuntingSection();
 void DumpUsage(wchar_t *dir);

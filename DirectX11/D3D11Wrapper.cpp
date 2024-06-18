@@ -94,7 +94,15 @@ static bool InitializeDLL()
 	if (G->gInitialized)
 		return true;
 
-	LoadConfigFile();
+	bool _reload = LoadConfigFile();
+	if (_reload) {
+		LogInfo("InitializeDLL has waiting for reload config\n");
+		Sleep(500);
+		// wait for reload completed
+		do { Sleep(20); } 
+		while (!G->gWaitReloadFlag);
+		LogInfo("InitializeDLL has waited to reload config\n");
+	}
 
 
 	G->bIntendedTargetExe = verify_intended_target_late();

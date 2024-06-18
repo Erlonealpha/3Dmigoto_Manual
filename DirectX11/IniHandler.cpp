@@ -4031,7 +4031,7 @@ static void warn_of_conflicting_d3dx(wchar_t *dll_ini_path)
 			"Using this configuration: %S\n", dll_ini_path);
 }
 
-void LoadConfigFile()
+bool LoadConfigFile()
 {
 	wchar_t iniFile[MAX_PATH], logFilename[MAX_PATH];
 	wchar_t setting[MAX_PATH];
@@ -4090,6 +4090,8 @@ void LoadConfigFile()
 		BOOL affinity = SetProcessAffinityMask(GetCurrentProcess(), one);
 		LogInfo("    force_cpu_affinity return: %s\n", affinity ? "true" : "false");
 	}
+
+	G->gOverlayLevel = GetIniInt(L"Logging", L"overlay_level", ACORDING_HUNTING, NULL);
 
 	// If specified in Logging section, wait for Attach to Debugger.
 	int debugger = GetIniInt(L"Logging", L"waitfordebugger", 0, NULL);
@@ -4322,7 +4324,8 @@ void LoadConfigFile()
 		G->decompiler_settings.MatrixPos_MUL1 = readStringParameter(setting);
 
 	// [Hunting]
-	ParseHuntingSection();
+	bool _reload = ParseHuntingSection();
+	if (_reload) return true;
 
 	// Must be done prior to parsing any command list sections, as every
 	// section registered in this set will be a candidate for optimisation:
@@ -4483,6 +4486,7 @@ void SavePersistentSettings()
 		fprintf_s(f, "%S = %.9g\n", global->name.c_str(), global->fval);
 
 	fclose(f);
+	return;
 }
 
 static void WipeUserConfig()
