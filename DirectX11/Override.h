@@ -99,6 +99,7 @@ public:
 	OverrideVars mSavedVars;
 	float mUserSeparation;
 	float mUserConvergence;
+	wchar_t *section_id;
 
 	Override();
 	Override(OverrideParams *params, OverrideVars *vars, float separation,
@@ -106,7 +107,8 @@ public:
 		 TransitionType transition_type,
 		 TransitionType release_transition_type,
 		 bool is_conditional, CommandListExpression condition,
-		 CommandList activate_command_list, CommandList deactivate_command_list) :
+		 CommandList activate_command_list, CommandList deactivate_command_list,
+		 wchar_t *section_id) :
 		mOverrideSeparation(separation),
 		mOverrideConvergence(convergence),
 		transition(transition),
@@ -116,7 +118,8 @@ public:
 		is_conditional(is_conditional),
 		condition(condition),
 		activate_command_list(activate_command_list),
-		deactivate_command_list(deactivate_command_list)
+		deactivate_command_list(deactivate_command_list),
+		section_id(section_id)
 	{
 		mOverrideParams = *params;
 		mOverrideVars = *vars;
@@ -150,12 +153,13 @@ public:
 			TransitionType transition_type,
 			TransitionType release_transition_type,
 			bool is_conditional, CommandListExpression condition,
-			CommandList activate_command_list, CommandList deactivate_command_list) :
+			CommandList activate_command_list, CommandList deactivate_command_list,
+			wchar_t *section_id) :
 		Override(params, vars, separation, convergence,
 				transition, release_transition,
 				transition_type, release_transition_type,
 				is_conditional, condition,
-				activate_command_list, deactivate_command_list),
+				activate_command_list, deactivate_command_list, section_id),
 		type(type)
 	{}
 
@@ -249,7 +253,7 @@ public:
 	void ScheduleTransition(HackerDevice *wrapper,
 			float target_separation, float target_convergence,
 			OverrideParams *targets, OverrideVars *vars,
-			int time, TransitionType transition_type);
+			int time, TransitionType transition_type, wchar_t *id);
 	void UpdatePresets(HackerDevice *wrapper);
 	void OverrideTransition::UpdateTransitions(HackerDevice *wrapper);
 	void Stop();

@@ -3984,6 +3984,11 @@ void FlagConfigReload(HackerDevice *device, void *private_data)
 	G->gWipeUserConfig = !!private_data;
 }
 
+static void ShowKeyValChangeSwitch(HackerDevice* device, void* private_data) {
+	LogInfo("ShowKeyValChange %d -> %d", G->show_keyval_change, !G->show_keyval_change);
+	G->show_keyval_change = !G->show_keyval_change;
+}
+
 static void ToggleFullScreen(HackerDevice *device, void *private_data)
 {
 	// SCREEN_FULLSCREEN has several options now, so to preserve the
@@ -4116,6 +4121,15 @@ bool LoadConfigFile()
 
 	// [Include]
 	ParseIncludedIniFiles();
+
+	//[Output]
+	LogInfo("[Output]\n");
+	G->show_keyname_when_activate = GetIniBool(L"Output", L"show_keyname_when_activate", false, NULL);
+	//Erlone: 为show_keyval_change绑定按键或直接指定布尔值
+	bool ret = RegisterIniKeyBinding(L"Output", L"show_keyval_change", ShowKeyValChangeSwitch, NULL, 0, NULL);
+	if (!ret)
+		LogInfo("  show_keyval_change not keybind, get bool...\n");
+		G->show_keyval_change = GetIniBool(L"Output", L"show_keyval_change", false, NULL);
 
 	// [System]
 	LogInfo("[System]\n");

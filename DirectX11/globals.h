@@ -417,6 +417,10 @@ struct Globals
 	bool dump_all_profiles;
 	DWORD ticks_at_launch;
 
+	//[Output]
+	bool show_keyname_when_activate;
+	bool show_keyval_change;
+
 	wchar_t SHADER_PATH[MAX_PATH];
 	wchar_t SHADER_CACHE_PATH[MAX_PATH];
 	wchar_t CHAIN_DLL_PATH[MAX_PATH];
@@ -637,6 +641,9 @@ struct Globals
 		mSelectedHullShader(-1),
 		mSelectedHullShaderPos(-1),
 		mPinkingShader(0),
+
+		bool show_keyname_when_activate(false),
+		bool show_keyval_change(false),
 
 		hunting(HUNTING_MODE_DISABLED),
 		fix_enabled(true),

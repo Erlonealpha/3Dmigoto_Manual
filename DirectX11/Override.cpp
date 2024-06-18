@@ -237,6 +237,11 @@ struct KeyOverrideCycleParam
 	}
 };
 
+static wchar_t* plcw2w(LPCWSTR str) {
+	wchar_t *wstr = new wchar_t[wcslen(str) + 1];
+	wcscpy_s(wstr, wcslen(str) + 1, str);
+	return wstr;
+}
 void KeyOverrideCycle::ParseIniSection(LPCWSTR section)
 {
 	std::map<OverrideParam, struct KeyOverrideCycleParam> param_bufs;
@@ -350,7 +355,7 @@ void KeyOverrideCycle::ParseIniSection(LPCWSTR section)
 			transition.as_int(0), release_transition.as_int(0),
 			transition_type.as_enum<const char *, TransitionType>(TransitionTypeNames, TransitionType::LINEAR),
 			release_transition_type.as_enum<const char *, TransitionType>(TransitionTypeNames, TransitionType::LINEAR),
-			is_conditional, condition_expression, activate_command_list, deactivate_command_list));
+			is_conditional, condition_expression, activate_command_list, deactivate_command_list, plcw2w(section)));
 	}
 }
 
@@ -517,6 +522,9 @@ void Override::Activate(HackerDevice *device, bool override_has_deactivate_condi
 		return;
 	}
 
+	if (G->show_keyname_when_activate)
+		LogOverlayW(LOG_INFO, section_id)
+
 	LogInfo("User key activation -->\n");
 
 	if (override_has_deactivate_condition) {
@@ -530,7 +538,8 @@ void Override::Activate(HackerDevice *device, bool override_has_deactivate_condi
 			&mOverrideParams,
 			&mOverrideVars,
 			transition,
-			transition_type);
+			transition_type,
+			section_id);
 
 	RunCommandList(device, device->GetHackerContext(), &activate_command_list, NULL, false);
 	if (!override_has_deactivate_condition) {
@@ -559,7 +568,8 @@ void Override::Deactivate(HackerDevice *device)
 			&mSavedParams,
 			&mSavedVars,
 			release_transition,
-			release_transition_type);
+			release_transition_type,
+			section_id);
 
 	RunCommandList(device, device->GetHackerContext(), &deactivate_command_list, NULL, true);
 }
@@ -648,11 +658,66 @@ static void _ScheduleTransition(struct OverrideTransitionParam *transition,
 	transition->transition_type = transition_type;
 }
 
+static void splitString(const std::wstring& str, const wchar_t* sep, std::vector<std::wstring>& result) {
+	size_t pos = 0;
+	while (true) {
+		size_t next_pos = str.find(sep, pos);
+		if (next_pos == std::wstring::npos) {
+			result.push_back(str.substr(pos));
+			break;
+		}
+		result.push_back(str.substr(pos, next_pos - pos));
+		pos = next_pos + wcslen(sep);
+	}
+}
+template<typename T>
+static std::wstring joinWStrings(const std::vector<T>& strings, const wchar_t* delim) {
+	std::wstring result;
+	for (size_t i = 0; i < strings.size(); ++i) {
+		result += strings[i];
+		if (i < strings.size() - 1) {
+			result += delim;
+		}
+	}
+	return result;
+}
+// 保留字符串的多少个部分, 按sep分割, reverse=true时, 将从后往前取, 否则从前往后取
+// 可以用于获取文件名的部分 | 变量名部分 | 路径名部分
+// 例如：$filename/part1/part2/part3.ini/swap -> part3.ini/swap
+static std::wstring basenamePart(const std::wstring& val_name, int part, const wchar_t* sep, bool reverse=false) {
+	if (val_name.find(sep)==std::wstring::npos) return val_name;
+	std::vector<std::wstring> parts;
+	splitString(val_name, sep, parts);
+	if (parts.size() <= part) return val_name; // 分割后的长度小于part, 直接返回原值
+	
+	std::vector<std::wstring> new_parts;
+	int i;
+	if (reverse) { i = parts.size() - part; part = parts.size(); }
+	else { i = 0; }
+	for (; i < part; i++)
+		new_parts.push_back(parts[i]);
+	
+	return joinWStrings(new_parts, sep);
+}
+static wchar_t* formatString(const wchar_t* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	int len = _vscwprintf(format, args) + 1; // 获取格式化后字符串的长度
+	wchar_t* buffer = new wchar_t[len]; // 分配内存
+	vswprintf_s(buffer, len, format, args); // 格式化字符串
+	va_end(args);
+
+	return buffer;
+}
+
 void OverrideTransition::ScheduleTransition(HackerDevice *wrapper,
 		float target_separation, float target_convergence,
 		OverrideParams *targets,
 		OverrideVars *var_targets,
-		int time, TransitionType transition_type)
+		int time, TransitionType transition_type,
+		wchar_t *section_id)
 {
 	ULONGLONG now = GetTickCount64();
 	NvAPI_Status err;
@@ -685,10 +750,15 @@ void OverrideTransition::ScheduleTransition(HackerDevice *wrapper,
 		_ScheduleTransition(&params[i->first], buf, G->iniParams[i->first.idx].*i->first.component,
 				i->second, now, time, transition_type);
 	}
+	std::vector<std::wstring> var_names;
 	for (j = var_targets->begin(); j != var_targets->end(); j++) {
+		if (G->show_keyval_change)
+			var_names.push_back(formatString(L"[%s: %#.2g -> %#.2g]", basenamePart(j->first->name, 1, L"\\", true).c_str(), j->first->fval, j->second));
 		_ScheduleTransition(&vars[j->first], j->first->name.c_str(), j->first->fval,
 				j->second, now, time, transition_type);
 	}
+	if (G->show_keyval_change)
+		LogOverlayW(LOG_INFO, L"%s:  %s", basenamePart(std::wstring(section_id), 3, L"\\", true).c_str(), joinWStrings(var_names, L" ").c_str());
 	LogInfo("\n");
 }
 
