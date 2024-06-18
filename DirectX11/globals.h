@@ -467,6 +467,8 @@ struct Globals
 	bool suppress_overlay;
 	UINT gOverlayLevel;
 
+	bool prevent_crash_mode;
+
 	bool deferred_contexts_enabled;
 
 	bool frame_analysis_registered;
@@ -642,8 +644,8 @@ struct Globals
 		mSelectedHullShaderPos(-1),
 		mPinkingShader(0),
 
-		bool show_keyname_when_activate(false),
-		bool show_keyval_change(false),
+		show_keyname_when_activate(false),
+		show_keyval_change(false),
 
 		hunting(HUNTING_MODE_DISABLED),
 		fix_enabled(true),
@@ -653,6 +655,7 @@ struct Globals
 		verbose_overlay(false),
 		suppress_overlay(false),
 		gOverlayLevel(ACORDING_HUNTING),
+		prevent_crash_mode(false),
 
 		deferred_contexts_enabled(true),
 

@@ -1998,11 +1998,11 @@ bool ParseHuntingSection()
 	G->config_reloadable = RegisterIniKeyBinding(L"Hunting", L"wipe_user_config", FlagConfigReload, NULL, noRepeat, (void*)true);
 
 	// [Loader] Prevent crashe mode
-	bool prevent_crash = GetIniBool(L"Loader", L"prevent_crashe_mode", false, NULL);
 	LogInfo("[Loader]\n");
-	LogInfo("  Prevent crashe mode: %d\n", prevent_crash);
+	bool G->prevent_crash_mode = GetIniBool(L"Loader", L"prevent_crashe_mode", false, NULL);
+	LogInfo("  Prevent crashe mode: %d\n", G->prevent_crash_mode);
 	// Erlone: 在hunting之后就绑定了ReloadConfig函数, 尝试在此调用ReloadConfig防止崩溃
-	if (prevent_crash && !G->gReloadFlag) {
+	if (G->prevent_crash_mode && !G->gReloadFlag) {
 		G->gReloadFlag = true; // 防止死循环
 		G->gReloadConfigPending = true;
 		Sleep(50);
